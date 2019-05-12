@@ -59,6 +59,7 @@ module.exports = function (grunt) {
         concat: {
             js: {
                 options: {
+                    sourceMap: true,
                     banner: banner + '(function(){\n\n',
                     footer: '\n\n})();\n',
                     process: function (src, s) {
@@ -212,6 +213,15 @@ module.exports = function (grunt) {
                     disDir + "**/.git"
                 ]
             }
+        },
+        watch: {
+            scripts: {
+                files: ['**/*.js'],
+                tasks: ['default'],
+                options: {
+                    spawn: false,
+                },
+            },
         }
 
     });
@@ -223,6 +233,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-transcoding');
     grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-watch');
 
     grunt.registerTask('default', 'UEditor build', function () {
 

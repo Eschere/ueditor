@@ -85,29 +85,107 @@ UE.plugin.register('autoupload', function (){
             return;
         }
 
-        /* 创建Ajax并提交 */
-        var xhr = new XMLHttpRequest(),
+        // MARK: 增加beforeUpload钩子
+        // author: eschere
+        if (me.options.beforeUpload) {
+            Promise.resolve(me.options.beforeUpload(file)).then(function(file) {
+                if (!file) {
+                    return
+                }
+
+                /* 创建Ajax并提交 */
+                var xhr = new XMLHttpRequest(),
+                fd = new FormData(),
+                params = utils.serializeParam(me.queryCommandValue('serverparam')) || '',
+                url = utils.formatUrl(actionUrl + (actionUrl.indexOf('?') == -1 ? '?':'&') + params);
+
+                fd.append(fieldName, file, file.name || ('blob.' + file.type.substr('image/'.length)));
+
+                // MARK: 增加自定义数据
+                // author: eschere
+                // fd.append('type', 'ajax');
+                if (me.options.extraData && Object.prototype.toString.apply(me.options.extraData) === "[object Object]") {
+                    for (var key in me.options.extraData) {
+                        fd.append(key, me.options.extraData[key]);
+                    }
+                }
+
+                xhr.open("post", url, true);
+                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+                // MARK: 增加自定义headers
+                // author: eschere
+                if (me.options.headers && Object.prototype.toString.apply(me.options.headers) === "[object Object]") {
+                    for (var key in me.options.headers) {
+                        xhr.setRequestHeader(key, me.options.headers[key]);
+                    }
+                }
+
+                xhr.addEventListener('load', function (e) {
+                    try{
+                        // MARK: 后端返回的url为fileURL
+                        // author: eschere
+                        var json = JSON.parse(e.target.response);
+                        json.url = json[me.options.imageResponseKey] || json.url;
+
+                        if (json.url) {
+                            successHandler(json);
+                        } else {
+                            errorHandler(json.state);
+                        }
+                    }catch(er){
+                        errorHandler(me.getLang('autoupload.loadError'));
+                    }
+                });
+                xhr.send(fd);
+            })
+        } else {
+            /* 创建Ajax并提交 */
+            var xhr = new XMLHttpRequest(),
             fd = new FormData(),
             params = utils.serializeParam(me.queryCommandValue('serverparam')) || '',
             url = utils.formatUrl(actionUrl + (actionUrl.indexOf('?') == -1 ? '?':'&') + params);
 
-        fd.append(fieldName, file, file.name || ('blob.' + file.type.substr('image/'.length)));
-        fd.append('type', 'ajax');
-        xhr.open("post", url, true);
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.addEventListener('load', function (e) {
-            try{
-                var json = (new Function("return " + utils.trim(e.target.response)))();
-                if (json.state == 'SUCCESS' && json.url) {
-                    successHandler(json);
-                } else {
-                    errorHandler(json.state);
+            fd.append(fieldName, file, file.name || ('blob.' + file.type.substr('image/'.length)));
+
+            // MARK: 增加自定义数据
+            // author: eschere
+            // fd.append('type', 'ajax');
+            if (me.options.extraData && Object.prototype.toString.apply(me.options.extraData) === "[object Object]") {
+                for (var key in me.options.extraData) {
+                    fd.append(key, me.options.extraData[key]);
                 }
-            }catch(er){
-                errorHandler(me.getLang('autoupload.loadError'));
             }
-        });
-        xhr.send(fd);
+
+            xhr.open("post", url, true);
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+            // MARK: 增加自定义headers
+            // author: eschere
+            if (me.options.headers && Object.prototype.toString.apply(me.options.headers) === "[object Object]") {
+                for (var key in me.options.headers) {
+                    xhr.setRequestHeader(key, me.options.headers[key]);
+                }
+            }
+
+            xhr.addEventListener('load', function (e) {
+                try{
+                    // MARK: 自定义后端返回文件路径字段
+                    // author: eschere
+                    var json = JSON.parse(e.target.response);
+                    json.url = json[me.options.imageResponseKey] || json.url;
+
+                    if (json.url) {
+                        successHandler(json);
+                    } else {
+                        errorHandler(json.state);
+                    }
+                }catch(er){
+                    errorHandler(me.getLang('autoupload.loadError'));
+                }
+            });
+            xhr.send(fd);
+        }
     }
 
     function getPasteImage(e){
