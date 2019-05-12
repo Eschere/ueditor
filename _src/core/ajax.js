@@ -99,8 +99,23 @@ UE.ajax = function() {
             }
         };
         if (method == "POST") {
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.send(submitStr);
+            // MARK: 上传文件需要formData设置不同的请求头
+            // eschere
+            if (ajaxOpts.useFormData) {
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                // MARK: 增加自定义headers
+                // eschere 
+                if (ajaxOptions.headers && Object.prototype.toString.apply(ajaxOptions.headers) === "[object Object]") {
+                    for (var key in ajaxOptions.headers) {
+                        xhr.setRequestHeader(key, ajaxOptions.headers[key])
+                    }
+                }
+                xhr.send(ajaxOpts.formData);
+
+            } else {
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send(submitStr);
+            }
         } else {
             xhr.send(null);
         }

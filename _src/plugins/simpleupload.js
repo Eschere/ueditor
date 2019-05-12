@@ -99,9 +99,9 @@ UE.plugin.register('simpleupload', function () {
                         // author: eschere
                         var url = res[me.options.imageResponseKey] || res.url;
                         var link = me.options.imageUrlPrefix + url;
+                        loader = me.document.getElementById(loadingId);
 
-                        if (url) {
-                            loader = me.document.getElementById(loadingId);
+                        if (url && loader) {
                             loader.setAttribute('src', link);
                             loader.setAttribute('_src', link);
                             loader.setAttribute('title', res.title || '');

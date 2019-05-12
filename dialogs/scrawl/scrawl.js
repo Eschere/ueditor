@@ -5,6 +5,9 @@
  * Time: 上午11:38
  * To change this template use File | Settings | File Templates.
  */
+
+/* eslint-disable */
+
 var scrawl = function (options) {
     options && this.initOptions(options);
 };
@@ -625,6 +628,32 @@ function addMaskLayer(html) {
     maskLayer.className = "maskLayer";
     maskLayer.innerHTML = html;
 }
+
+// base64转blob
+function convertBase64ToBlob (base64){  
+
+    var bytes=window.atob(base64); //去掉url的头，并转换为byte  
+
+    //处理异常,将ascii码小于0的转换为大于0  
+    var ab = new ArrayBuffer(bytes.length);  
+    var ia = new Uint8Array(ab);  
+    for (var i = 0; i < bytes.length; i++) {  
+        ia[i] = bytes.charCodeAt(i);  
+    }  
+
+    return new Blob( [ab] , {type : 'image/png'});  
+}
+
+function convertBase64ToFile (base64, filename = 'scrawl.png') { 
+    var bstr = atob(base64),
+        n = bstr.length,
+        u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: 'image/png' });
+}
+
 //执行确认按钮方法
 function exec(scrawlObj) {
     if (scrawlObj.isScrawl) {
@@ -635,11 +664,14 @@ function exec(scrawlObj) {
                 timeout:100000,
                 onsuccess:function (xhr) {
                     if (!scrawlObj.isCancelScrawl) {
-                        var responseObj;
-                        responseObj = eval("(" + xhr.responseText + ")");
-                        if (responseObj.state == "SUCCESS") {
+                        // MARK: 自定义图片返回接口
+                        // eschere
+                        var responseObj = JSON.parse(xhr.responseText);
+                        var resUrl = responseObj[editor.options.scrawlResponseKey] || responseObj.url;
+
+                        if (resUrl) {
                             var imgObj = {},
-                                url = editor.options.scrawlUrlPrefix + responseObj.url;
+                                url = editor.options.scrawlUrlPrefix + resUrl;
                             imgObj.src = url;
                             imgObj._src = url;
                             imgObj.alt = responseObj.original || '';
@@ -647,7 +679,7 @@ function exec(scrawlObj) {
                             editor.execCommand("insertImage", imgObj);
                             dialog.close();
                         } else {
-                            alert(responseObj.state);
+                            alert('没有涂鸦路径信息');
                         }
 
                     }
@@ -657,12 +689,54 @@ function exec(scrawlObj) {
                     dialog.close();
                 }
             };
-            options[editor.getOpt('scrawlFieldName')] = base64;
 
-            var actionUrl = editor.getActionUrl(editor.getOpt('scrawlActionName')),
-                params = utils.serializeParam(editor.queryCommandValue('serverparam')) || '',
-                url = utils.formatUrl(actionUrl + (actionUrl.indexOf('?') == -1 ? '?':'&') + params);
-            ajax.request(url, options);
+            // MARK: formData上传文件
+            var formData = new FormData();
+            options.useFormData = true;
+            options.formData = formData;
+
+            // MARK: 增加beforeUpload钩子
+            // eschere
+            var file = convertBase64ToBlob(base64);
+
+            if (editor.options.beforeUpload) {
+                Promise.resolve(editor.options.beforeUpload(file)).then(function(file) {
+                    if (!file) {
+                        return
+                    }
+
+                    formData.set(editor.getOpt('scrawlFieldName'), file, file.name || 'scrawl.png');
+
+                    options.headers = editor.options.headers;
+
+                    if (editor.options.extraData && Object.prototype.toString.apply(editor.options.extraData) === "[object Object]") {
+                        for (var key in editor.options.extraData) {
+                            formData.append(key, editor.options.extraData[key])
+                        }
+                    }
+
+                    var actionUrl = editor.getActionUrl(editor.getOpt('scrawlActionName')),
+                        params = utils.serializeParam(editor.queryCommandValue('serverparam')) || '',
+                        url = utils.formatUrl(actionUrl + (actionUrl.indexOf('?') == -1 ? '?':'&') + params);
+                    ajax.request(url, options);
+                })
+            } else {
+
+                formData.append(editor.getOpt('scrawlFieldName'), file, file.name || 'scrawl.png');
+
+                options.headers = editor.options.headers;
+
+                if (editor.options.extraData && Object.prototype.toString.apply(editor.options.extraData) === "[object Object]") {
+                    for (var key in editor.options.extraData) {
+                        formData.append(key, editor.options.extraData[key])
+                    }
+                }
+                
+                var actionUrl = editor.getActionUrl(editor.getOpt('scrawlActionName')),
+                    params = utils.serializeParam(editor.queryCommandValue('serverparam')) || '',
+                    url = utils.formatUrl(actionUrl + (actionUrl.indexOf('?') == -1 ? '?':'&') + params);
+                ajax.request(url, options);
+            }
         }
     } else {
         addMaskLayer(lang.noScarwl + "&nbsp;&nbsp;&nbsp;<input type='button' value='" + lang.continueBtn + "'  onclick='removeMaskLayer()'/>");

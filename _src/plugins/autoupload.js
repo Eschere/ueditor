@@ -66,7 +66,6 @@ UE.plugin.register('autoupload', function (){
         }
 
         /* 插入loading的占位符 */
-        // TODO: 极端情况下上传先完成，插入loading后完成
         me.execCommand('inserthtml', loadingHtml);
 
         /* 判断后端配置是否没有加载成功 */
