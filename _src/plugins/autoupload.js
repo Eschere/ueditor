@@ -66,6 +66,7 @@ UE.plugin.register('autoupload', function (){
         }
 
         /* 插入loading的占位符 */
+        // TODO: 极端情况下上传先完成，插入loading后完成
         me.execCommand('inserthtml', loadingHtml);
 
         /* 判断后端配置是否没有加载成功 */
@@ -91,6 +92,13 @@ UE.plugin.register('autoupload', function (){
             Promise.resolve(me.options.beforeUpload(file)).then(function(file) {
                 if (!file) {
                     return
+                }
+
+                /* 判断文件格式是否超出允许 */
+                var fileext = file.name ? file.name.substr(file.name.lastIndexOf('.')):'';
+                if ((fileext && filetype != 'image') || (allowFiles && (allowFiles.join('') + '.').indexOf(fileext.toLowerCase() + '.') == -1)) {
+                    errorHandler(me.getLang('autoupload.exceedTypeError'));
+                    return;
                 }
 
                 /* 创建Ajax并提交 */
