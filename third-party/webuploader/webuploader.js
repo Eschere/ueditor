@@ -3693,13 +3693,15 @@
     
                 // 在发送之间可以添加字段什么的。。。
                 // 如果默认的字段不够使用，可以通过监听此事件来扩展
-                owner.trigger( 'uploadBeforeSend', block, data, headers );
-    
-                // 开始发送。
-                tr.appendBlob( opts.fileVal, block.blob, file.name );
-                tr.append( data );
-                tr.setRequestHeader( headers );
-                tr.send();
+                owner.trigger( 'uploadBeforeSend', block, data, headers, function () {
+                    // MARK: beloadBeforeSend很有可能是异步过程
+                    // eschere
+                    // 开始发送。
+                    tr.appendBlob( opts.fileVal, block.blob, file.name );
+                    tr.append( data );
+                    tr.setRequestHeader( headers );
+                    tr.send();
+                });
             },
     
             // 完成上传。

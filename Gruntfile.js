@@ -106,7 +106,12 @@ module.exports = function (grunt) {
             parse: {
                 src: disDir + '<%= pkg.name %>.parse.js',
                 dest: disDir + '<%= pkg.name %>.parse.min.js'
-            }
+            },
+            // 临时性的压缩文件，如果你在小范围修改third-party中的文件在最后打包时可以启动压缩
+            // tmp: {
+            //     src: './third-party/webuploader/webuploader.js',
+            //     dest: './third-party/webuploader/webuploader.min.js'
+            // }
         },
         copy: {
             base: {

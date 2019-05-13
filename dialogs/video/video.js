@@ -714,9 +714,45 @@
                 }
             });
 
-            uploader.on('uploadBeforeSend', function (file, data, header) {
+            uploader.on('uploadBeforeSend', function (file, data, header, cb) {
                 //这里可以通过data对象添加POST参数
-                header['X_Requested_With'] = 'XMLHttpRequest';
+                header['X-Requested-With'] = 'XMLHttpRequest';
+
+                if (editor.options.beforeUpload) {
+                    Promise.resolve(editor.options.beforeUpload(file)).then(function (file) {
+                        if (!file) {
+                            return
+                        }
+
+                        if(editor.options.headers && Object.prototype.toString.apply(editor.options.headers) === "[object Object]"){
+                            for(var key in editor.options.headers){
+                                header[key] = editor.options.headers[key]
+                            }
+                        }
+
+                        if(editor.options.extraData && Object.prototype.toString.apply(editor.options.extraData) === "[object Object]"){
+                            for(var key in editor.options.extraData){
+                                data[key] = editor.options.extraData[key]
+                            }
+                        }
+
+                        cb();
+                    })
+                } else {
+                    if(editor.options.headers && Object.prototype.toString.apply(editor.options.headers) === "[object Object]"){
+                        for(var key in editor.options.headers){
+                            header[key] = editor.options.headers[key]
+                        }
+                    }
+
+                    if(editor.options.extraData && Object.prototype.toString.apply(editor.options.extraData) === "[object Object]"){
+                        for(var key in editor.options.extraData){
+                            data[key] = editor.options.extraData[key]
+                        }
+                    }
+
+                    cb();
+                }
             });
 
             uploader.on('uploadProgress', function (file, percentage) {
@@ -730,18 +766,20 @@
 
             uploader.on('uploadSuccess', function (file, ret) {
                 var $file = $('#' + file.id);
+                console.log(file)
                 try {
                     var responseText = (ret._raw || ret),
                         json = utils.str2json(responseText);
-                    if (json.state == 'SUCCESS') {
+                        url = json[editor.options.videoResponseKey] || json.url
+                    if (url) {
                         uploadVideoList.push({
-                            'url': json.url,
-                            'type': json.type,
+                            'url': url,
+                            'type': json.type || file.type,
                             'original':json.original
                         });
                         $file.append('<span class="success"></span>');
                     } else {
-                        $file.find('.error').text(json.state).show();
+                        $file.find('.error').text('url字段错误').show();
                     }
                 } catch (e) {
                     $file.find('.error').text(lang.errorServerUpload).show();
