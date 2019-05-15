@@ -2078,6 +2078,9 @@ var domUtils = dom.domUtils = {
      * @return { Boolean } 是否是空元素
      */
     isEmptyBlock:function (node,reg) {
+        if(!node){
+            return;
+        }
         if(node.nodeType != 1)
             return 0;
         reg = reg || new RegExp('[ \xa0\t\r\n' + domUtils.fillChar + ']', 'g');
