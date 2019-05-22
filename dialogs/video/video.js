@@ -718,6 +718,8 @@
                 //这里可以通过data对象添加POST参数
                 header['X-Requested-With'] = 'XMLHttpRequest';
 
+                // MARK: 增加自定义参数
+                // author: eschere
                 if (editor.options.beforeUpload) {
                     Promise.resolve(editor.options.beforeUpload(file)).then(function (file) {
                         if (!file) {
@@ -766,10 +768,11 @@
 
             uploader.on('uploadSuccess', function (file, ret) {
                 var $file = $('#' + file.id);
-                console.log(file)
                 try {
                     var responseText = (ret._raw || ret),
                         json = utils.str2json(responseText);
+                        // MARK: 增加自定义
+                        // author: eschere
                         url = json[editor.options.videoResponseKey] || json.url
                     if (url) {
                         uploadVideoList.push({
