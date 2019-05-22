@@ -407,7 +407,7 @@
 			mark:   [],
 			nav:    [],
 			ol:     ['class', 'style'],
-			p:      ['class', 'style'],
+			p:      ['class', 'style', 'align'],
 			pre:    ['class', 'style'],
 			s:      [],
 			section:[],
