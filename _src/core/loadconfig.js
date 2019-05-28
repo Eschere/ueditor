@@ -50,10 +50,14 @@
         this._serverConfigLoaded = false;
 
         try {
-            utils.extend(this.options, this.options.serverOptions);
-            utils.extend(this.options, this.options.serverExtra);
-            this.fireEvent('serverConfigLoaded');
-            this._serverConfigLoaded = true;
+            if (this.options.serverOptions) {    
+                utils.extend(this.options, this.options.serverOptions);
+                utils.extend(this.options, this.options.serverExtra);
+                this.fireEvent('serverConfigLoaded');
+                this._serverConfigLoaded = true;
+            } else {
+                throw 'error'
+            }
         } catch (e) {
             console.error(this.getLang('loadconfigFormatError'));
         }
@@ -63,7 +67,11 @@
     // author: eschere
     UE.Editor.prototype.setExtraData = function(options){
         try {
-            utils.extend(this.options, options);
+            if (this._serverConfigLoaded) {   
+                utils.extend(this.options, options);
+            } else {
+                throw 'error'
+            }
         } catch (e) {
             console.error(this.getLang('setExtraconfigFormatError'));
         }
