@@ -84,7 +84,7 @@ UE.plugin.register('simpleupload', function () {
                     return;
                 }
 
-                formData.set(me.options.imageFieldName, file, file.name || ('blob.' + file.type.substr('image/'.length)))
+                formData.append(me.options.imageFieldName, file, file.name || ('blob.' + file.type.substr('image/'.length)))
                 // MARK: 增加自定义数据
                 // author: eschere
                 if (me.options.extraData && Object.prototype.toString.apply(me.options.extraData) === "[object Object]") {
