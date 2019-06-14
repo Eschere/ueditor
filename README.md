@@ -1,3 +1,8 @@
+## 变动说明
+1. 基于官方1.4.3.3分支修改，所有变动使用`MARK:`标记
+2. 后端配置前移
+3. 用法及新增的API目前没有时间整理文档，建议直接参考[react-ueditor-component](https://github.com/Eschere/react-editor-component)的用法
+
 Get Started
 =====
 
